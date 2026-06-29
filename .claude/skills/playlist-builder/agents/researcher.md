@@ -25,21 +25,33 @@ a detail. For every song determine:
   current hit? Note recognizability.
 
 ## Output
-Write a compact research summary (`research.md` when a file system is available;
-otherwise hold it in context for the next phase). Include:
+Write TWO files to the run directory (see
+[../reference/run-io.md](../reference/run-io.md) for the directory + resume rules).
+Both are required so the next phase reads from disk, not from chat context.
 
-1. A per-song table or bullet list with the fields above.
-2. **Genres in order of frequency of occurrence** in the seed.
-3. **Overall style and vibe**: the seed's DNA in 3 to 5 sentences (energy
+### 1. `research.md` (the handoff summary)
+1. **Genres in order of frequency of occurrence** in the seed.
+2. **Overall style and vibe**: the seed's DNA in 3 to 5 sentences (energy
    profile, eras, mood, audience, recognizability).
-4. **Notable anchors**: the 3 to 6 songs that most define the seed.
-5. **Constraints implied by the event** (e.g. wedding = family-friendly, broad
+3. **Notable anchors**: the 3 to 6 songs that most define the seed.
+4. **Constraints implied by the event** (e.g. wedding = family-friendly, broad
    age range, needs slow dances and a peak; festival = high energy throughout).
+5. End with a 4 to 6 bullet `## handoff` block (what you produced, key decisions,
+   what the analyzer should focus on).
 
-Keep it dense and factual. Do not propose new songs yet, that is the Analyzer and
-Song-Finder's job. Hand off the summary.
+### 2. `research.csv` (the research spreadsheet)
+One row per seed song using the exact header in
+[../reference/run-io.md](../reference/run-io.md)
+(`position,song,artist,genre,subgenre,bpm,key,energy,era,role,reception,notes`),
+then a final `SUMMARY` row whose `notes` cell holds the **vibe post-amble**: 3 to
+6 sentences on the overall vibe, the genres by frequency, and exactly what the new
+playlist will match against and how it will expand the seed for the event. Quote
+any cell containing a comma.
+
+Keep both dense and factual. Do not propose new songs yet, that is the Analyzer
+and Song-Finder's job. Return only a 2 to 4 line summary plus the two file paths.
 
 ## Caps
-- Prefer your own knowledge; web-search only when genuinely unsure. Keep total
-  searches modest (roughly one per uncertain track).
+- You may web-search and web-fetch to confirm details; prefer your own knowledge
+  first and keep searches modest (roughly one per uncertain track).
 - No em dashes or en dashes in prose.

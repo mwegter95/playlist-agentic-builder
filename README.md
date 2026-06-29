@@ -27,8 +27,14 @@ Every run returns three artifacts:
    else), so you can copy it straight into Spotify or Apple Music.
 2. **A post-amble** — a separate block explaining how the new list matches and
    expands the seed (vibe, BPM, genres by frequency, anchor songs, energy arc).
-3. **A reasoning spreadsheet** — `playlist.csv` with one row per track and 1 to 3
-   sentences on why it was chosen.
+3. **Two reasoning spreadsheets** — `research.csv` (per seed song: genre, BPM,
+   key, energy, era, role, reception, plus a SUMMARY cell with the overall-vibe
+   post-amble) and `playlist.csv` (one row per new track with 1 to 3 sentences on
+   why it was chosen).
+
+Each phase writes its outputs to `runs/<slug>/` and reads the previous phase's
+files from disk, so a run is **debuggable and resumable from the middle** if a
+phase errors or stops.
 
 ## Repository layout
 
@@ -43,6 +49,7 @@ playlist-agentic-builder/
       song-finder.md                      <- phase 3 spec  (shared)
     reference/
       output-contract.md                  <- the strict output format (shared)
+      run-io.md                           <- run directory, artifacts, resume + token rules (shared)
       example-wedding.md                  <- worked example for tone/scope
   .github/                                <- GitHub Copilot wiring (thin wrappers)
     prompts/
@@ -82,6 +89,12 @@ The orchestrator dispatches the three subagents (`playlist-researcher`,
 artifacts, and returns the two code blocks.
 
 Notes:
+- All three subagents have web search and fetch tools, write their outputs to
+  `runs/<slug>/`, and read the prior phase's files from disk. If a run stops, the
+  next invocation skips completed phases (whose files already exist) and resumes
+  from the first incomplete one.
+- The song-finder builds large lists in batches of about 25 appended to disk, which
+  avoids the token-limit failure that one-shot generation of 100 songs can cause.
 - The three `*.agent.md` files are `user-invocable: false`, so they run only as
   subagents of the orchestrator, not as standalone chat agents.
 - To make these available in **any** workspace, copy `.github/prompts/*` and
@@ -123,13 +136,17 @@ The skill lives at `.claude/skills/playlist-builder/` and is self-contained.
 - **Output block 1:** only `Song - Artist` lines, exactly N, no headers, no
   numbering, copy-paste ready.
 - **Output block 2:** the post-amble explanation (separate block).
-- **Output artifact:** `playlist.csv` (or a third `csv` block on mobile).
+- **Output artifacts:** `research.csv` and `playlist.csv` (or third `csv` blocks
+  on mobile).
+- **Resumable:** each phase writes to `runs/<slug>/`; a stopped run resumes from
+  the first phase whose output files are missing.
 - **Hard rules:** never reuse a seed song, no duplicates, real songs only, hit N
   exactly, and no em dashes or en dashes.
 
 ## Editing the workflow
 
 Change behavior in one place: the specs under
-`.claude/skills/playlist-builder/agents/` and the format in
-`.claude/skills/playlist-builder/reference/output-contract.md`. Both runtimes pick
-up the change because the Copilot wrappers reference these same files.
+`.claude/skills/playlist-builder/agents/` and the format/IO in
+`.claude/skills/playlist-builder/reference/` (`output-contract.md`, `run-io.md`).
+Both runtimes pick up the change because the Copilot wrappers reference these same
+files.

@@ -10,10 +10,12 @@ An agentic workflow that takes a small seed playlist and produces a new, larger
 playlist that captures the same vibe and sentiment **without reusing any of the
 seed songs**, tailored to a requested event or vibe.
 
-It runs three agent phases in sequence. Each phase has a dedicated spec file in
-this skill folder. Read the spec for a phase, do that phase's work fully, hold its
-output, then move to the next phase. The phases share one goal: match the seed's
-DNA, then expand it tastefully for the event.
+It runs three agent phases in sequence. **Each phase writes its output to disk and
+reads the previous phase's files from disk**, so a run can be debugged and resumed
+from the middle if a phase errors or stops (the song-finder phase has hit token
+limits when everything was held in context). Read the spec for a phase, do that
+phase's work fully, write its files, then move to the next phase. The phases share
+one goal: match the seed's DNA, then expand it tastefully for the event.
 
 ## When to use
 The user pastes a seed playlist (lines of `Song - Artist`) and asks for a bigger
@@ -28,14 +30,18 @@ output.
 
 1. **Researcher** — Profile every seed song (genre, BPM, key, energy, era, role,
    reception) and summarize the seed's overall style, vibe, and genres in order of
-   frequency. Spec: [agents/researcher.md](agents/researcher.md).
+   frequency. Writes `research.md` + `research.csv` (per-song rows plus a SUMMARY
+   cell holding the vibe post-amble). Spec:
+   [agents/researcher.md](agents/researcher.md).
 2. **Analyzer** — Turn that profile into a quantitative build spec: genre quotas
    summing to N, an energy arc for the event, BPM/era targets, lyrical guardrails,
-   and an expansion strategy (adjacent artists/scenes to mine). Spec:
-   [agents/analyzer.md](agents/analyzer.md).
+   and an expansion strategy (adjacent artists/scenes to mine). Writes
+   `analysis.md`. Spec: [agents/analyzer.md](agents/analyzer.md).
 3. **Song-Finder** — Select N real songs that fill the quotas and ride the arc,
    exclude every seed song, track per-track reasoning inline, and emit the final
-   output. Spec: [agents/song-finder.md](agents/song-finder.md).
+   output. Builds the list in batches of ~25 appended to disk to avoid token
+   limits. Writes `playlist.txt`, `postamble.md`, `playlist.csv`. Spec:
+   [agents/song-finder.md](agents/song-finder.md).
 
 If you have the ability to spawn subagents (e.g. Claude Code, GitHub Copilot),
 run each phase as an isolated subagent and pass only its summary forward. If you
@@ -64,7 +70,14 @@ A worked reference (couple's wedding) is in
 scope only, never copy its songs.
 
 ## Where to write files (when a file system is available)
-Create `runs/<short-slug>/` next to where you are working and write
-`research.md`, `analysis.md`, and `playlist.csv` there. The slug is a kebab-case
-summary of the request (e.g. `wedding-100`). On Claude web/mobile, skip files and
-use the code-block fallbacks described in the output contract.
+Follow [reference/run-io.md](reference/run-io.md): create `runs/<short-slug>/`
+next to where you are working and write `research.md`, `research.csv`,
+`analysis.md`, `playlist.txt`, `postamble.md`, and `playlist.csv` there. The slug
+is a kebab-case summary of the request (e.g. `wedding-100`).
+
+**Resume:** before running a phase, check whether its output files already exist
+and are non-empty; if so, skip that phase and pass the paths forward. Only re-run
+a phase whose output is missing or flagged for redo.
+
+On Claude web/mobile, skip files and use the code-block fallbacks described in the
+output contract.

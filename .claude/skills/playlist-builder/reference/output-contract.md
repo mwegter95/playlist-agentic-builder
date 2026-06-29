@@ -2,7 +2,8 @@
 
 This file defines the EXACT shape every final answer must take, no matter which
 runtime executes the workflow (Claude skill or GitHub Copilot). The
-`song-finder` agent produces it; the orchestrator returns it verbatim.
+`song-finder` agent produces it; the orchestrator returns it verbatim. For the run
+directory, file names, and resume rules, see [run-io.md](run-io.md).
 
 ## Hard rules
 
