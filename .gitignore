@@ -1,0 +1,5 @@
+# Workflow run outputs (generated per request)
+runs/
+
+# OS / editor noise
+.DS_Store
